@@ -42,6 +42,7 @@ TRANSITIONS = {
 
 def split(line) -> typing.List[str]:
     """Split statement into words with proper handling of quotes."""
+    line = line + ' '
     results = []
     buff = []
     state = _State.INITIAL

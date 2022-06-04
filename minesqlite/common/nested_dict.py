@@ -43,7 +43,7 @@ class NestedDefaultDict(collections.MutableMapping):
         return data
 
     def __len__(self) -> int:
-        return len(self.keys())
+        return len(self._inner_data.keys())
 
     def __iter__(self) -> typing.Iterator:
         return NestedDefaultDictIterator(self)

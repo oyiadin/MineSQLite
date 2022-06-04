@@ -18,7 +18,7 @@ class SysConfManager(NestedDefaultDict):
         'repl.read.prompt': '>>> ',
     }
 
-    def __init__(self, conf_file: typing.TextIO):
+    def __init__(self, conf_file: typing.TextIO = None):
         super().__init__(default_factory=lambda: None)
 
         # load defaults
