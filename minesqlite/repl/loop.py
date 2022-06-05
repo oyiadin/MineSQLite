@@ -8,12 +8,11 @@ from minesqlite.repl.eval import eval_
 
 
 def loop(instance: MineSQLite):
-    while True:
-        for line in read(instance):
-            try:
-                splitted = split(line)
-                rows = eval_(instance, splitted)
-                print_(rows)
-            except Exception as exc:
-                print("{}: {}".format(exc.__class__.__name__, str(exc)))
-            print()
+    for line in read(instance):
+        try:
+            splitted = split(line)
+            rows = eval_(instance, splitted)
+            print_(rows)
+        except Exception as exc:
+            print("{}: {}".format(exc.__class__.__name__, str(exc)))
+        print()

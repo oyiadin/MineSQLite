@@ -9,9 +9,14 @@ def read(instance: MineSQLite) -> typing.Iterator[str]:
     sysconf = instance.sysconf
     infile: typing.IO = sysconf['repl.read.infile']
     prompt: str = sysconf['repl.read.prompt']
-    while True:
-        print(prompt, end='')
-        line = infile.readline().strip()
+    print(prompt, end='')
+    for line in infile:
+        line = line.strip()
         if not line:
+            print(prompt, end='')
             continue
         yield line
+        print(prompt, end='')
+
+    # TODO
+    raise StopIteration
