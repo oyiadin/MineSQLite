@@ -3,7 +3,10 @@
 import typing
 
 from minesqlite.data.base import DataManagerABC, CursorABC
-from minesqlite.sysconf.manager import SysConfManager
+
+if typing.TYPE_CHECKING:
+    from minesqlite.minesqlite import MineSQLite
+
 
 _KeyType = str
 _RowType = dict
@@ -14,8 +17,8 @@ class Cursor(CursorABC):
 
 
 class MemoryBytesDataManager(DataManagerABC):
-    def __init__(self, sysconf: SysConfManager):
-        super().__init__(sysconf)
+    def __init__(self, instance: 'MineSQLite'):
+        super().__init__(instance)
         self._inner_data = {}
 
     def create_one(self, pk: _KeyType, kvs: _RowType):

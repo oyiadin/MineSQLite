@@ -12,4 +12,4 @@ class MineSQLite(object):
         self.sysconf: SysConfManager = SysConfManager(**sysconf_kwargs)
 
         self.schema: SchemaManager = SchemaManager(self.sysconf)
-        self.data: DataManager = DataManager(self.sysconf)
+        self.data: DataManager = DataManager(self)
