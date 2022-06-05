@@ -16,7 +16,8 @@ class SysConfManager(NestedDefaultDict):
     _DEFAULTS = {
         'repl.read.infile': 'stdin',
         'repl.read.prompt': '>>> ',
-        'schema.read.infile': 'etc/schema.yaml'
+        'schema.read.infile': 'etc/schema.yaml',
+        'data.driver': 'memory_dict',
     }
 
     def __init__(self, /, conf_file: typing.TextIO = None):

@@ -1,5 +1,6 @@
 # coding=utf-8
 # Author: @hsiaoxychen 2022/06/05
+from minesqlite.data.base import DataManager
 from minesqlite.schema.manager import SchemaManager
 from minesqlite.sysconf.manager import SysConfManager
 
@@ -11,3 +12,4 @@ class MineSQLite(object):
         self.sysconf = SysConfManager(**sysconf_kwargs)
 
         self.schema = SchemaManager(self.sysconf)
+        self.data = DataManager(self.sysconf)

@@ -2,3 +2,4 @@
 # Author: @hsiaoxychen
 
 import minesqlite.commands.add
+import minesqlite.commands.get

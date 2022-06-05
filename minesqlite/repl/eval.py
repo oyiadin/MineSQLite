@@ -81,6 +81,12 @@ def eval_(instance: MineSQLite, components: typing.List[str]):
                         break
                     else:
                         raise ValueError("too few arguments")
+                elif repeat_mode == RepeatMode.SINGLE:
+                    # TODO: too much arguments
+                    if times == 0:
+                        raise ValueError("too few arguments")
+                    else:
+                        break
                 else:
                     raise Exception("unexpected error!")
 
