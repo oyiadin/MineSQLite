@@ -1,12 +1,15 @@
 # coding=utf-8
 # Author: @hsiaoxychen 2022/06/05
+import typing
+
 import yaml
 
-from minesqlite.sysconf.manager import SysConfManager
+if typing.TYPE_CHECKING:
+    from minesqlite.sysconf.manager import SysConfManager
 
 
 class SchemaManager(object):
-    def __init__(self, sysconf: SysConfManager):
+    def __init__(self, sysconf: 'SysConfManager'):
         infile = sysconf['schema.read.infile']
         data = yaml.safe_load(infile)
         self._inner_data = data

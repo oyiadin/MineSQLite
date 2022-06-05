@@ -10,8 +10,9 @@ from minesqlite.minesqlite import MineSQLite
 
 class RepeatMode(enum.Enum):
     SINGLE = 'single'
-    ANY = 'any'
-    AT_LEAST_ONE = 'at_least_one'
+    ANY = 'any'  # *
+    AT_LEAST_ONE = 'at_least_one'  # +
+    AT_MOST_ONE = 'at_most_one'  # ?
 
 
 def validate_key(data: str):
@@ -39,10 +40,11 @@ def eval_(instance: MineSQLite, components: typing.List[str]):
     command_info = get_command_info(command)
     for arg_part in command_info.args_format:
         repeat_mode = RepeatMode.SINGLE
-        if arg_part[-1] in ['*', '+']:
+        if arg_part[-1] in ['*', '+', '?']:
             repeat_mode = {
                 '*': RepeatMode.ANY,
                 '+': RepeatMode.AT_LEAST_ONE,
+                '?': RepeatMode.AT_MOST_ONE,
             }[arg_part[-1]]
             arg_part = arg_part[:-1]
 
@@ -87,11 +89,13 @@ def eval_(instance: MineSQLite, components: typing.List[str]):
                         raise ValueError("too few arguments")
                     else:
                         break
+                elif repeat_mode == RepeatMode.AT_MOST_ONE:
+                    break
                 else:
                     raise Exception("unexpected error!")
 
             times += 1
-            if repeat_mode == RepeatMode.SINGLE:
+            if repeat_mode in [RepeatMode.SINGLE, RepeatMode.AT_MOST_ONE]:
                 break
 
         parsed_args.append(current_group)

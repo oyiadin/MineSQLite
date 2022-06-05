@@ -9,6 +9,7 @@ from minesqlite.minesqlite import MineSQLite
 @register('list', 'List', 'List all employees.',
           args_format=[])
 def list_(instance: MineSQLite, groups) -> typing.List[dict]:
+    """List all employees."""
     data_driver = instance.data.driver
     cursor = data_driver.build_cursor()
     rows = []

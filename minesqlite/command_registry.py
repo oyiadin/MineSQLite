@@ -27,3 +27,7 @@ def register(command: str, name: str, description: str,
 
 def get_command_info(command: str) -> CommandInfo:
     return _registry[command]
+
+
+def get_all_commands() -> typing.Dict[str, CommandInfo]:
+    return _registry

@@ -9,6 +9,11 @@ from minesqlite.minesqlite import MineSQLite
 @register('add', 'Add', 'Adds an employee.',
           args_format=['kv+'])
 def add(instance: MineSQLite, groups) -> typing.List[dict]:
+    """Adds and employee.
+
+    Example:
+        add id 12345 name "Chen Xiaoyuan" in_date 2022-06-05 department aCMP position "Software Development Engineer"
+    """
     kvs = groups[0]
     kvs_dict = {}
     for key, value in kvs:
