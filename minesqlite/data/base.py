@@ -18,11 +18,11 @@ class DataManagerABC(abc.ABC):
         self.sysconf = sysconf
 
     @abc.abstractmethod
-    def create_one(self, pk: _KeyType, kvs: _RowType):
+    def create_one(self, pk: _KeyType, kvs: _RowType) -> _RowType:
         pass
 
     @abc.abstractmethod
-    def read_one(self, pk: _KeyType):
+    def read_one(self, pk: _KeyType) -> _RowType:
         pass
 
     @abc.abstractmethod
@@ -31,17 +31,18 @@ class DataManagerABC(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def update_one(self, pk: _KeyType, kvs: _RowType):
+    def update_one(self, pk: _KeyType, kvs: _RowType) -> _RowType:
         pass
 
     @abc.abstractmethod
-    def delete_one(self, pk: _KeyType):
+    def delete_one(self, pk: _KeyType) -> _RowType:
         pass
 
 
 class DataManager(abc.ABC):
     def __init__(self, sysconf: SysConfManager):
         self.sysconf = sysconf
+        self.driver: typing.Optional[DataManagerABC] = None
 
         driver_kwargs = {'sysconf': sysconf}
         if sysconf['data.driver'] == 'memory_dict':

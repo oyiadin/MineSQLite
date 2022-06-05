@@ -24,7 +24,7 @@ class SchemaManager(object):
 
     @property
     def primary_key(self):
-        return self._primary_key
+        return self._primary_key['name']
 
     def validate_fields(self, kvs: dict):
         got_keys = set(kvs.keys())

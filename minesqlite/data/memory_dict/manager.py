@@ -23,10 +23,11 @@ class MemoryDictDataManager(DataManagerABC):
             return True
         return False
 
-    def create_one(self, pk: _KeyType, kvs: _RowType):
+    def create_one(self, pk: _KeyType, kvs: _RowType) -> _RowType:
         if self._check_exists(pk):
             raise ValueError("duplicate key: {}".format(pk))
         self._inner_data[pk] = kvs
+        return self._inner_data[pk]
 
     def read_one(self, pk: _KeyType) -> _RowType:
         if not self._check_exists(pk):
