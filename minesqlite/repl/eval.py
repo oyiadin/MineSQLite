@@ -5,6 +5,7 @@ import re
 import typing
 
 from minesqlite.command_registry import get_command_info
+from minesqlite.minesqlite import MineSQLite
 
 
 class RepeatMode(enum.Enum):
@@ -14,7 +15,7 @@ class RepeatMode(enum.Enum):
 
 
 def validate_key(data: str):
-    result = re.match(r'^[a-zA-Z_]\w?$', data)
+    result = re.match(r'^[a-zA-Z_]\w*$', data)
     if result is None:
         raise ValueError("invalid key: {}".format(data))
 
@@ -23,7 +24,7 @@ def validate_value(data: str):
     return
 
 
-def eval_(components: typing.List[str]):
+def eval_(instance: MineSQLite, components: typing.List[str]):
     command = components[0]
     args = components[1:]
     arg_index = 0
@@ -50,7 +51,8 @@ def eval_(components: typing.List[str]):
         while True:
             try:
                 if arg_part == 'k':
-                    arg = next_arg()
+                    # make key as lowercase
+                    arg = next_arg().lower()
                     validate_key(arg)
                     current_group.append(arg)
                 elif arg_part == 'v':
@@ -58,7 +60,8 @@ def eval_(components: typing.List[str]):
                     validate_value(arg)
                     current_group.append(arg)
                 elif arg_part == 'kv':
-                    arg1 = next_arg()
+                    # make key as lowercase
+                    arg1 = next_arg().lower()
                     try:
                         arg2 = next_arg()
                     except IndexError:
@@ -87,4 +90,4 @@ def eval_(components: typing.List[str]):
 
         parsed_args.append(current_group)
 
-    return command_info.handler(parsed_args)
+    return command_info.handler(instance, parsed_args)

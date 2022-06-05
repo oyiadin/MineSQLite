@@ -1,14 +1,16 @@
 # coding=utf-8
 # Author: @hsiaoxychen 2022/06/04
-
+from minesqlite.minesqlite import MineSQLite
 from minesqlite.repl.read import read
 from minesqlite.repl.split import split
 from minesqlite.repl.eval import eval_
-from minesqlite.sysconf.manager import SysConfManager
 
 
-def loop(sysconf: SysConfManager):
+def loop(instance: MineSQLite):
     while True:
-        for line in read(sysconf):
-            splitted = split(line)
-            results = eval_(splitted)
+        for line in read(instance):
+            try:
+                splitted = split(line)
+                results = eval_(instance, splitted)
+            except Exception as exc:
+                print("{}: {}".format(exc.__class__.__name__, str(exc)))

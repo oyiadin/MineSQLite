@@ -2,10 +2,11 @@
 # Author: @hsiaoxychen 2022/06/04
 import typing
 
-from minesqlite.sysconf.manager import SysConfManager
+from minesqlite.minesqlite import MineSQLite
 
 
-def read(sysconf: SysConfManager) -> typing.Iterator[str]:
+def read(instance: MineSQLite) -> typing.Iterator[str]:
+    sysconf = instance.sysconf
     infile: typing.IO = sysconf['repl.read.infile']
     prompt: str = sysconf['repl.read.prompt']
     while True:

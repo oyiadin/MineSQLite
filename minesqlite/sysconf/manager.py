@@ -16,9 +16,10 @@ class SysConfManager(NestedDefaultDict):
     _DEFAULTS = {
         'repl.read.infile': 'stdin',
         'repl.read.prompt': '>>> ',
+        'schema.read.infile': 'etc/schema.yaml'
     }
 
-    def __init__(self, conf_file: typing.TextIO = None):
+    def __init__(self, /, conf_file: typing.TextIO = None):
         super().__init__(default_factory=lambda: None)
 
         # load defaults
@@ -60,7 +61,15 @@ class SysConfManager(NestedDefaultDict):
         return handler(k) if handler is not None else value
 
     @staticmethod
-    def _set_repl_read_infile(k: _KT, v: _VT) -> _VT:
+    def _set_filename_helper(k: _KT, v: _VT) -> _VT:
         if v == 'stdin':
             return sys.stdin
         return open(v)
+
+    @staticmethod
+    def _set_repl_read_infile(k: _KT, v: _VT) -> _VT:
+        return SysConfManager._set_filename_helper(k, v)
+
+    @staticmethod
+    def _set_schema_read_infile(k: _KT, v: _VT) -> _VT:
+        return SysConfManager._set_filename_helper(k, v)

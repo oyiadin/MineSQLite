@@ -1,0 +1,7 @@
+columns:
+  - name: id
+    attribute: primary_key
+  - name: name
+  - name: in_date
+  - name: department
+  - name: position
