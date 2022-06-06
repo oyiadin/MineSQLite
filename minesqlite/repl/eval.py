@@ -97,10 +97,10 @@ def eval_(instance: MineSQLite, components: typing.List[str]):
             if repeat_mode in [RepeatMode.SINGLE, RepeatMode.AT_MOST_ONE]:
                 break
 
-        if arg_index < len(args):
-            # TODO: more specific exceptions
-            raise ValueError("too many arguments!")
-
         parsed_args.append(current_group)
+
+    if arg_index < len(args):
+        # TODO: more specific exceptions
+        raise ValueError("too many arguments!")
 
     return command_info.handler(instance, parsed_args)
