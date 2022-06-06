@@ -6,7 +6,7 @@ from minesqlite.sysconf.manager import SysConfManager
 
 
 class MineSQLite(object):
-    def __init__(self, /, sysconf_kwargs=None):
+    def __init__(self, sysconf_kwargs=None):
         if sysconf_kwargs is None:
             sysconf_kwargs = {}
         self.sysconf: SysConfManager = SysConfManager(**sysconf_kwargs)

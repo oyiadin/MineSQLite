@@ -20,7 +20,7 @@ class SysConfManager(NestedDefaultDict):
         'data.driver': 'memory_dict',
     }
 
-    def __init__(self, /, conf_file: typing.TextIO = None):
+    def __init__(self, conf_file: typing.TextIO = None):
         super().__init__(default_factory=lambda: None)
 
         # load defaults
@@ -35,9 +35,7 @@ class SysConfManager(NestedDefaultDict):
             for k, v in config.items(section=section):
                 self[k] = v
 
-    def _get_action_handler(self,
-                            action: typing.Literal["set", "get", "del"],
-                            key: str):
+    def _get_action_handler(self, action: str, key: str):
         attr = getattr(
             self, '_{}_{}'.format(action, key.replace('.', '_')), None)
         return attr if callable(attr) else None
