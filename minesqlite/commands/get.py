@@ -24,10 +24,12 @@ def get(instance: MineSQLite, groups) -> typing.List[dict]:
     if key == 'id':
         return [driver.read_one(value)]
     else:  # name
+        rows = []
         cursor = driver.build_cursor()
         while cursor:
             cursor, row = instance.data.driver.next_row(cursor)
             if row['name'] == value:
-                return [row]
+                rows.append(row)
+        return rows
 
     return []
