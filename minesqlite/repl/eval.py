@@ -16,7 +16,7 @@ class RepeatMode(enum.Enum):
 
 
 def validate_key(data: str):
-    result = re.match(r'^[a-zA-Z_]\w*$', data)
+    result = re.match(r'^\$?[a-zA-Z_]\w*$', data)
     if result is None:
         raise ValueError("invalid key: {}".format(data))
 
