@@ -4,7 +4,6 @@ import typing
 
 from minesqlite.data.base import DataManagerABC, CursorABC
 from minesqlite.minesqlite import MineSQLite
-from minesqlite.sysconf.manager import SysConfManager
 
 _KeyType = str
 _RowType = dict
