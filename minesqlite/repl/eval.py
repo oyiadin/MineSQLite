@@ -1,106 +1,12 @@
 # coding=utf-8
 # Author: @hsiaoxychen 2022/06/04
-import enum
-import re
 import typing
 
-from minesqlite.command_registry import get_command_info
-from minesqlite.minesqlite import MineSQLite
+if typing.TYPE_CHECKING:
+    from minesqlite.minesqlite import MineSQLite
 
 
-class RepeatMode(enum.Enum):
-    SINGLE = 'single'
-    ANY = 'any'  # *
-    AT_LEAST_ONE = 'at_least_one'  # +
-    AT_MOST_ONE = 'at_most_one'  # ?
-
-
-def validate_key(data: str):
-    result = re.match(r'^\$?[a-zA-Z_]\w*$', data)
-    if result is None:
-        raise ValueError("invalid key: {}".format(data))
-
-
-def validate_value(data: str):
-    return
-
-
-def eval_(instance: MineSQLite, components: typing.List[str]):
-    command = components[0]
-    args = components[1:]
-    arg_index = 0
-
-    def next_arg():
-        nonlocal arg_index
-        result = args[arg_index]
-        arg_index += 1
-        return result
-
-    parsed_args = []
-    command_info = get_command_info(command)
-    for arg_part in command_info.args_format:
-        repeat_mode = RepeatMode.SINGLE
-        if arg_part[-1] in ['*', '+', '?']:
-            repeat_mode = {
-                '*': RepeatMode.ANY,
-                '+': RepeatMode.AT_LEAST_ONE,
-                '?': RepeatMode.AT_MOST_ONE,
-            }[arg_part[-1]]
-            arg_part = arg_part[:-1]
-
-        current_group = []
-        times = 0
-        while True:
-            try:
-                if arg_part == 'k':
-                    # make key as lowercase
-                    arg = next_arg().lower()
-                    validate_key(arg)
-                    current_group.append(arg)
-                elif arg_part == 'v':
-                    arg = next_arg()
-                    validate_value(arg)
-                    current_group.append(arg)
-                elif arg_part == 'kv':
-                    # make key as lowercase
-                    arg1 = next_arg().lower()
-                    try:
-                        arg2 = next_arg()
-                    except IndexError:
-                        raise ValueError(
-                            "the key {} must come with a value!".format(arg1))
-                    validate_key(arg1)
-                    validate_value(arg2)
-                    current_group.append((arg1, arg2))
-                else:
-                    raise ValueError("invalid arg_format: {}".format(arg_part))
-
-            except IndexError:
-                if repeat_mode == RepeatMode.ANY:
-                    break
-                elif repeat_mode == RepeatMode.AT_LEAST_ONE:
-                    if times > 0:
-                        break
-                    else:
-                        raise ValueError("too few arguments")
-                elif repeat_mode == RepeatMode.SINGLE:
-                    if times == 0:
-                        raise ValueError("too few arguments")
-                    else:
-                        break
-                elif repeat_mode == RepeatMode.AT_MOST_ONE:
-                    break
-                else:
-                    raise Exception("unexpected error!")
-
-            times += 1
-            if repeat_mode in [RepeatMode.SINGLE, RepeatMode.AT_MOST_ONE]:
-                break
-
-        parsed_args.append(current_group)
-
-    if arg_index < len(args):
-        # TODO: more specific exceptions
-        raise ValueError("too many arguments!")
-
-    return command_info.handler(instance, parsed_args)
+def eval_(instance: 'MineSQLite',
+          handler: typing.Callable,
+          args_groups: list[typing.Union[list, dict]]):
+    return handler(instance, args_groups)

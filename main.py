@@ -4,5 +4,6 @@ from minesqlite.minesqlite import MineSQLite
 from minesqlite.repl.loop import loop as repl_loop
 
 if __name__ == '__main__':
-    instance = MineSQLite()
+    instance = MineSQLite(
+        sysconf_kwargs={'conf_file': open('etc/config.ini')})
     repl_loop(instance)
