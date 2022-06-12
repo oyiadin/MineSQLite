@@ -28,16 +28,3 @@ class SchemaManager(object):
     @property
     def primary_key(self):
         return self._primary_key['name']
-
-    def validate_fields(self, kvs: dict):
-        got_keys = set(kvs.keys())
-        expect_keys = set(self.fields)
-        if got_keys != expect_keys:
-            missing_keys = expect_keys - got_keys
-            extra_keys = got_keys - expect_keys
-            if missing_keys:
-                raise ValueError(
-                    "missing keys: {}".format(', '.join(missing_keys)))
-            if extra_keys:
-                raise ValueError(
-                    "unexpected extra keys: {}".format(', '.join(extra_keys)))

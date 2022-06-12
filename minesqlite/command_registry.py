@@ -1,24 +1,31 @@
 # coding=utf-8
 # Author: @hsiaoxychen
+import argparse
 import collections
 import typing
+
+from minesqlite.minesqlite import MineSQLite
 
 
 CommandInfo = collections.namedtuple(
     "CommandInfo",
-    ['name', 'handler', 'description', 'help_',
-     'args_format'],
+    ['command', 'name', 'handler', 'description', 'help_',
+     'argparser_factory'],
 )
 
 _registry: typing.Dict[str, CommandInfo] = {}
+ArgparserFactoryType = typing.Callable[
+    [MineSQLite, argparse.ArgumentParser], argparse.ArgumentParser,
+]
 
 
 def register(command: str, name: str, description: str,
-             args_format: typing.List[str]):
+             argparser_factory: ArgparserFactoryType):
     def decorator(func):
         global _registry
         help_ = func.__doc__
-        command_info = CommandInfo(name, func, description, help_, args_format)
+        command_info = CommandInfo(
+            command, name, func, description, help_, argparser_factory)
         _registry[command] = command_info
         return func
 

@@ -72,7 +72,7 @@ def split_words(line) -> typing.List[str]:
     statement = line + ' '  # a trick to correctly handle the last word
     fsm: SplitFSM = SplitFSM(statement)
 
-    for ch in line:
+    for ch in statement:
         if ch == ' ':
             fsm.meet_space()  # noqa
         elif ch == '"':

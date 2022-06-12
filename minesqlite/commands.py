@@ -1,78 +1,110 @@
 # coding=utf-8
 # Author: @hsiaoxychen
+import argparse
 import functools
 import typing
 
-from minesqlite.command_registry import register, get_all_commands, \
-    get_command_info
+from minesqlite.command_registry import register
+from minesqlite.common.constant import SortOrder
 from minesqlite.minesqlite import MineSQLite
 
 
-@register('add', 'Add', 'Adds an employee.',
-          args_format=['kv+'])
-def command_add(instance: MineSQLite,
-                args_groups: list[dict]) -> list[dict]:
+def argparser_factory_add(
+        instance: MineSQLite,
+        parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    for field in instance.schema.fields:
+        parser.add_argument('--%s' % field, required=True)
+    return parser
+
+
+@register(command='add', name='Add',
+          description='Adds an employee.',
+          argparser_factory=argparser_factory_add)
+def command_add(instance: MineSQLite, args: argparse.Namespace) -> list[dict]:
     """Adds an employee.
 
     Example:
-        add id 12345 name "Chen Xiaoyuan" in_date 2022-06-05 department aCMP position "Software Development Engineer"
+        add --id 12345 --name "Chen Xiaoyuan" --in_date 2022-06-05 \
+--department aCMP --position "Software Development Engineer"
     """
-    kvs = args_groups[0]
-    instance.schema.validate_fields(kvs)
+    kvs = args.__dict__.copy()
     pk = kvs.pop(instance.schema.primary_key)
     return [instance.data.driver.create_one(pk, kvs)]
 
 
-@register('del', 'Delete', 'Delete an employee.',
-          args_format=['kv'])
-def command_del(instance: MineSQLite,
-                args_groups: list[list]) -> list[dict]:
+def argparser_factory_delete(
+        instance: MineSQLite,
+        parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    parser.add_argument('--%s' % instance.schema.primary_key, required=True)
+    return parser
+
+
+@register(command='del', name='Delete',
+          description='Delete an employee.',
+          argparser_factory=argparser_factory_delete)
+def command_delete(instance: MineSQLite, args: argparse.Namespace) \
+        -> list[dict]:
     """Delete an employee.
 
     Example:
-        del id 12345
+        del --id 12345
     """
-    key, value = args_groups[0]
-    assert key in ['id'], "you can only delete by id"
-    return [instance.data.driver.delete_one(value)]
+    pk = args[instance.schema.primary_key]
+    return [instance.data.driver.delete_one(pk)]
 
 
-@register('get', 'Get', 'Gets the info of an employee.',
-          args_format=['kv'])
-def command_get(instance: MineSQLite,
-                args_groups: list[list]) -> list[dict]:
+def argparser_factory_get(
+        instance: MineSQLite,
+        parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    parser.add_argument('--%s' % instance.schema.primary_key, required=True)
+    return parser
+
+
+@register(command='get', name='Get',
+          description='Gets the info of an employee.',
+          argparser_factory=argparser_factory_get)
+def command_get(instance: MineSQLite, args: argparse.Namespace) -> list[dict]:
     """Gets the information of an employee.
 
     Example:
-        get id 12345
+        get --id 12345
     """
-    key, value = args_groups[0]
-    assert key in ['id'], "you can only delete by id"
-    return [instance.data.driver.read_one(value)]
+    pk = args[instance.schema.primary_key]
+    return [instance.data.driver.read_one(pk)]
 
 
-@register('list', 'List', 'List all employees.',
-          args_format=['kv*'])
-def command_list(instance: MineSQLite,
-                 args_groups: list[dict]) -> list[dict]:
+def argparser_factory_list(
+        instance: MineSQLite,
+        parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    for field in instance.schema.fields:
+        parser.add_argument('--%s' % field, required=False)
+    parser.add_argument('--sort', nargs='+', required=False)
+    return parser
+
+
+@register(command='list', name='List', description='List all employees.',
+          argparser_factory=argparser_factory_list)
+def command_list(instance: MineSQLite, args: argparse.Namespace) -> list[dict]:
     """List all employees (after filtering) and sort them.
 
     Example:
+        # list all employees
         list
-        list name "Chen Xiaoyuan" $sort_asc id $sort_desc name
+        # list all employees within aCMP and sort them, id asc, name desc
+        list --department aCMP --sort >id <name
     """
-    magic_params = []
-    filter_params = {}
-    for key, value in args_groups[0].items():
-        if key in filter_params:
-            raise ValueError("field repeated: {}".format(key))
-        if key.startswith('$'):
-            magic_params.append((key, value))
-        else:
-            filter_params[key] = value
+    filter_params = args.__dict__.copy()
+    sort_params = []
+    # extract the sorting rules
+    if 'sort' in filter_params:
+        filter_params.pop('sort')
+        for field in args.sort:
+            order = SortOrder.DESC if field.startswith('<') else SortOrder.ASC
+            field = field.lstrip('><')
+            sort_params.append((field, order))
 
-    data_driver = instance.data.driver
-    cursor = data_driver.build_cursor()
+    # iterate over the whole database and do the filter (if any)
+    cursor = instance.data.driver.build_cursor()
     rows = []
     while cursor:
         cursor, row = instance.data.driver.next_row(cursor)
@@ -83,74 +115,69 @@ def command_list(instance: MineSQLite,
             rows.append(row)
 
     def compare(row1: dict, row2: dict) -> int:
-        for magic_key, magic_value in magic_params:
-            if magic_key == '$sort_asc':
-                reverse = False
-            elif magic_key == '$sort_desc':
-                reverse = True
-            else:
-                continue  # TODO 这里直接忽略没啥问题，后续可以优化下
-
-            field_name = magic_value
-            value1, value2 = row1[field_name], row2[field_name]
+        for field, order in sort_params:
+            value1, value2 = row1[field], row2[field]
             if value1 == value2:
                 continue
-            result = 1 if value1 > value2 else -1
-            if reverse:
-                result = -result
-            return result
-        return 0
+            if order == SortOrder.ASC:
+                return 1 if value1 > value2 else -1
+            else:
+                return 1 if value1 < value2 else -1
+        return 0  # all equal
 
-    if magic_params:
+    if sort_params:
         rows.sort(key=functools.cmp_to_key(compare))
+
     return rows
 
 
+def argparser_factory_mod(
+        instance: MineSQLite,
+        parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    for field in instance.schema.fields:
+        required = field == instance.schema.primary_key
+        parser.add_argument('--%s' % field, required=required)
+    return parser
+
+
 @register('mod', 'Modify', 'Modify an employee.',
-          args_format=['kv', 'kv+'])
-def mod(instance: MineSQLite, groups) -> typing.List[dict]:
+          argparser_factory=argparser_factory_mod)
+def mod(instance: MineSQLite, args: argparse.Namespace) -> list[dict]:
     """Modify an employee.
 
     Example:
-        mod id 12345 name hsiaoxychen
+        mod --id 12345 --name hsiaoxychen
     """
-    kv1 = groups[0][0]
-    kvs2 = groups[1]
-    assert kv1[0] in ['id'], "you can only modify by id"
-    kvs_dict = {}
-    for key, value in kvs2:
-        if key == 'id':
-            raise ValueError("not allowed to change id!")
-        if key in kvs_dict:
-            raise ValueError("duplicated key!")
-        kvs_dict[key] = value
+    kvs = args.__dict__.copy()
+    pk = kvs[instance.schema.primary_key]
+    kvs.pop(instance.schema.primary_key)
+    return [instance.data.driver.update_one(pk, kvs)]
 
-    return [instance.data.driver.update_one(kv1[1], kvs_dict)]
-
-
-@register('help', 'Help', 'Show this help message.',
-          args_format=['v?'])
-def command_help(instance: MineSQLite, groups) -> typing.List[dict]:
-    what = groups[0][0] if groups[0] else None
-    print('Help:\n')
-    print_no_sep = functools.partial(print, sep='')
-
-    # help of all commands
-    if what is None:
-        prefix = ' ' * 4
-        command_infos = get_all_commands()
-        max_width = max(len(command) for command in command_infos.keys())
-        for command, info in command_infos.items():
-            print_no_sep(prefix,
-                         f'{command:{max_width}} \t',
-                         info.description)
-
-    # help of a specific command
-    else:
-        info = get_command_info(what)
-        prefix = ' ' * 4
-        print_no_sep(prefix, what, ': ', info.name)
-        if info.help_ is not None:
-            print_no_sep(prefix, info.help_)
-
-    return []
+#
+#
+# @register('help', 'Help', 'Show this help message.',
+#           args_format=['v?'])
+# def command_help(instance: MineSQLite, groups) -> typing.List[dict]:
+#     what = groups[0][0] if groups[0] else None
+#     print('Help:\n')
+#     print_no_sep = functools.partial(print, sep='')
+#
+#     # help of all commands
+#     if what is None:
+#         prefix = ' ' * 4
+#         command_infos = get_all_commands()
+#         max_width = max(len(command) for command in command_infos.keys())
+#         for command, info in command_infos.items():
+#             print_no_sep(prefix,
+#                          f'{command:{max_width}} \t',
+#                          info.description)
+#
+#     # help of a specific command
+#     else:
+#         info = get_command_info(what)
+#         prefix = ' ' * 4
+#         print_no_sep(prefix, what, ': ', info.name)
+#         if info.help_ is not None:
+#             print_no_sep(prefix, info.help_)
+#
+#     return []
