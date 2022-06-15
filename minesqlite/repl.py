@@ -87,11 +87,11 @@ def print_results(instance: MineSQLite, rows: typing.Iterable[dict]):
     if not rows:
         return
 
-    headers = instance.schema.fields
+    headers = [field.upper() for field in instance.schema.fields]
     table = []
     for row_dict in rows:
         row_list = []
-        for field in headers:
+        for field in instance.schema.fields:
             row_list.append(row_dict[field])
         table.append(row_list)
     print(tabulate(table, headers=headers))
