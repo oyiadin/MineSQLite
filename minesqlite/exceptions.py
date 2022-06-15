@@ -55,3 +55,18 @@ class CommandArgumentConflict(MineSQLiteException):
     errcode = '0x101006'
     message_format = "conflict argument: %(key)s"
 
+
+class DataDuplicateEntry(MineSQLiteException):
+    errcode = '0x102001'
+    message_format = 'duplicate entry: there is already an entry ' \
+                     'whose `%(field)s` equals to `%(value)s`'
+
+
+class DataEntryNotFound(MineSQLiteException):
+    errcode = '0x102002'
+    message_format = 'no any entries matching %(field)s=%(value)s were found.'
+
+
+class DataEntryInvalid(MineSQLiteException):
+    errcode = '0x102003'
+    message_format = 'invalid entry: %(reason)s'

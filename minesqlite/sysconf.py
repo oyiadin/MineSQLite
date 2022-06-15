@@ -7,6 +7,7 @@ import configparser
 import sys
 import typing
 
+from minesqlite import exceptions
 
 KT = str
 VT = typing.Any
@@ -62,7 +63,8 @@ class SysConfManager(collections.abc.MutableMapping):
             return True
         elif v in ['false', 'False', 'no', '0']:
             return False
-        raise ValueError("invalid boolean value in config %s: %s" % (k, v))
+        raise exceptions.InternalError(
+            "invalid boolean value in config %s: %s" % (k, v))
 
     @staticmethod
     def _hook_set_repl_read_infile(k: KT, v: VT) -> VT:

@@ -4,6 +4,8 @@ import typing
 
 import yaml
 
+from minesqlite import exceptions
+
 if typing.TYPE_CHECKING:
     from minesqlite.sysconf import SysConfManager
 
@@ -36,8 +38,8 @@ class SchemaManager(object):
             missing_keys = expect_keys - got_keys
             extra_keys = got_keys - expect_keys
             if missing_keys:
-                raise ValueError(
-                    "missing keys: {}".format(', '.join(missing_keys)))
+                raise exceptions.DataEntryInvalid(
+                    reason="missing keys: %s" % ', '.join(missing_keys))
             if extra_keys:
-                raise ValueError(
-                    "unexpected extra keys: {}".format(', '.join(extra_keys)))
+                raise exceptions.DataEntryInvalid(
+                    reason="unexpected extra keys: %s" % ', '.join(extra_keys))

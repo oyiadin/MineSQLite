@@ -93,7 +93,8 @@ def command_list(instance: MineSQLite,
             elif magic_key == '$sort_desc':
                 reverse = True
             else:
-                continue  # TODO 这里直接忽略没啥问题，后续可以优化下
+                raise exceptions.InternalError(
+                    "invalid magic_key: %s" % magic_key)
 
             value1, value2 = row1[field_name], row2[field_name]
             if value1 == value2:

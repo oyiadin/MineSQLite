@@ -3,6 +3,8 @@
 import abc
 import typing
 
+from minesqlite import exceptions
+
 if typing.TYPE_CHECKING:
     from minesqlite.minesqlite import MineSQLite
 
@@ -20,6 +22,11 @@ class CursorABC(abc.ABC):
 class DataManagerABC(abc.ABC):
     def __init__(self, instance: 'MineSQLite'):
         self.instance = instance
+
+    @property
+    def pk(self):
+        """Primary key name."""
+        return self.instance.schema.primary_key
 
     @abc.abstractmethod
     def create_one(self, pk: _KeyType, kvs: _RowType) -> _RowType:
@@ -58,4 +65,5 @@ class DataManager(abc.ABC):
             from minesqlite.data.drivers import memory_dict as driver
             self.driver = driver.MemoryDictDataManager(**driver_kwargs)
         else:
-            raise ValueError("unknown data.driver: {}".format(data_driver))
+            raise exceptions.InternalError(
+                "unknown data.driver: %s" % data_driver)
