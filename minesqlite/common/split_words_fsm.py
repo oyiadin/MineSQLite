@@ -39,7 +39,8 @@ class SplitFSM(FiniteStateMachine):
         # we're currently at initial state, and we are dealing with another
         # extra space right now, just ignore it, and stay inside initial state
         Transition(trigger='meet_space',
-                   source=State.INITIAL, dest=State.INITIAL),
+                   source=State.INITIAL, dest=State.INITIAL,
+                   side_effects=['save_next_pos']),
         # a quote is the beginning of a quoted-string
         Transition(trigger='meet_quote',
                    source=State.INITIAL, dest=State.IN_QUOTED_STRING,
