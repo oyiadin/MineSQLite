@@ -2,7 +2,8 @@
 # Author: @hsiaoxychen 2022/06/15
 import re
 import typing
-from pprint import pprint
+
+from tabulate import tabulate
 
 from minesqlite import exceptions
 from minesqlite.command_registry import get_command_info, CommandInfo
@@ -81,11 +82,19 @@ def execute_command(instance: 'MineSQLite',
     return command_info.handler(instance, arguments)
 
 
-def print_results(rows: typing.Iterable[dict]):
+def print_results(instance: MineSQLite, rows: typing.Iterable[dict]):
     """Print the results of a command."""
-    for row in rows:
-        # TODO: table
-        pprint(row)
+    if not rows:
+        return
+
+    headers = instance.schema.fields
+    table = []
+    for row_dict in rows:
+        row_list = []
+        for field in headers:
+            row_list.append(row_dict[field])
+        table.append(row_list)
+    print(tabulate(table, headers=headers))
 
 
 def repl_loop(instance: MineSQLite):
@@ -105,7 +114,7 @@ def repl_loop(instance: MineSQLite):
             command_info = get_command_info(command)
             grouped_arguments = analyse_arguments(command_info, arguments)
             rows = execute_command(instance, command_info, grouped_arguments)
-            print_results(rows)
+            print_results(instance, rows)
         except Exception as exc:
             # if not in debug mode, just prints a brief message
             if not instance.sysconf['general.debug']:
