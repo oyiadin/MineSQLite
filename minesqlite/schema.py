@@ -5,7 +5,7 @@ import typing
 import yaml
 
 if typing.TYPE_CHECKING:
-    from minesqlite.sysconf.manager import SysConfManager
+    from minesqlite.sysconf import SysConfManager
 
 
 class SchemaManager(object):

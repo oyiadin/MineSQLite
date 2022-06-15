@@ -55,10 +55,7 @@ class DataManager(abc.ABC):
         driver_kwargs = {'instance': instance}
         data_driver = instance.sysconf['data.driver']
         if data_driver == 'memory_dict':
-            from minesqlite.data.memory_dict import manager as driver
+            from minesqlite.data.drivers import memory_dict as driver
             self.driver = driver.MemoryDictDataManager(**driver_kwargs)
-        elif data_driver == 'memory_bytes':
-            from minesqlite.data.memory_bytes import manager as driver
-            self.driver = driver.MemoryBytesDataManager(**driver_kwargs)
         else:
             raise ValueError("unknown data.driver: {}".format(data_driver))
