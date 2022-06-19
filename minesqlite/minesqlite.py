@@ -8,6 +8,5 @@ from minesqlite.sysconf import SysConfManager
 class MineSQLite(object):
     def __init__(self, sysconf_kwargs: dict):
         self.sysconf: SysConfManager = SysConfManager(**sysconf_kwargs)
-
         self.schema: SchemaManager = SchemaManager(self.sysconf)
         self.data: DataManager = DataManager(self)

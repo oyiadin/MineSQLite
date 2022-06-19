@@ -61,7 +61,7 @@ class SplitFSM(FiniteStateMachine):
                    source=State.IN_QUOTED_STRING, dest=State.INITIAL,
                    side_effects=['save_contents_between_pos',
                                  'save_next_pos']),
-        # otherwise, just eat in the character
+        # otherwise, just eats in the character
     ]
 
     def __init__(self, statement: str, *args, **kwargs):

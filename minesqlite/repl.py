@@ -94,7 +94,7 @@ def print_results(instance: MineSQLite, rows: typing.Iterable[dict]):
         for field in instance.schema.fields:
             row_list.append(row_dict[field])
         table.append(row_list)
-    print(tabulate(table, headers=headers))
+    print(tabulate(table, headers=headers, tablefmt='orgtbl'))
 
 
 def repl_loop(instance: MineSQLite):

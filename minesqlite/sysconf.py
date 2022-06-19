@@ -27,7 +27,7 @@ class SysConfManager(collections.abc.MutableMapping):
             self[k] = v.strip('"')
 
     def _get_hook(self, action: str, key: str):
-        """"""
+        """Get the hook function."""
         attr = getattr(
             self, '_hook_{}_{}'.format(action, key.replace('.', '_')), None)
         return attr if callable(attr) else None
@@ -59,6 +59,7 @@ class SysConfManager(collections.abc.MutableMapping):
 
     @staticmethod
     def _set_boolean_helper(k: KT, v: VT) -> VT:
+        """A helper function that handles boolean values."""
         if v in ['true', 'True', 'yes', '1']:
             return True
         elif v in ['false', 'False', 'no', '0']:
