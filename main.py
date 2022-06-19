@@ -6,7 +6,7 @@ from minesqlite.repl import repl_loop
 """
 Test data:
 
-add id 222 name "name BBB" in_date 2022-07-06 department P6 position "SDE4"
+add id 222 name "name BBB" in_date 2022-07-05 department P6 position "SDE4"
 add id 111 name "name HHH" in_date 2022-05-05 department P2 position "SDE7"
 add id 777 name "name CCC" in_date 2022-06-05 department P1 position "SDE2"
 add id 666 name "name GGG" in_date 2022-08-05 department P1 position "SDE6"

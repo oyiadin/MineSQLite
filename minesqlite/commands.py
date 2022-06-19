@@ -23,7 +23,10 @@ def command_add(instance: MineSQLite,
         add id 12345 name "Chen Xiaoyuan" in_date 2022-06-05 department aCMP position "Software Development Engineer"
     """
     kvs = utils.convert_argument_groups_into_dict(arguments)
-    instance.schema.validate_fields(kvs)
+    instance.schema.validate_keys(kvs)
+    instance.schema.validate_types(kvs)
+
+    kvs = instance.schema.convert_types(kvs)
     pk = kvs.pop(instance.schema.primary_key)
     return [instance.data.driver.create_one(pk, kvs)]
 
@@ -36,7 +39,7 @@ def command_del(instance: MineSQLite, arguments: list[str]) -> list[dict]:
     Example:
         del 12345
     """
-    pk_value = arguments[0]
+    pk_value = instance.schema.convert_primary_key_type(arguments[0])
     return [instance.data.driver.delete_one(pk_value)]
 
 
@@ -49,7 +52,7 @@ def command_get(instance: MineSQLite,
     Example:
         get 12345
     """
-    pk_value = arguments[0]
+    pk_value = instance.schema.convert_primary_key_type(arguments[0])
     return [instance.data.driver.read_one(pk_value)]
 
 
@@ -72,6 +75,11 @@ def command_list(instance: MineSQLite,
             magic_params.append((key, value))
         else:
             filter_params[key] = value
+
+    instance.schema.validate_keys(
+        filter_params, no_missing=False, no_extra=True)
+    instance.schema.validate_types(filter_params)
+    filter_params = instance.schema.convert_types(filter_params)
 
     def do_filter(_row: dict) -> bool:
         for filter_key, filter_value in filter_params.items():
@@ -124,9 +132,17 @@ def command_mod(instance: MineSQLite,
         raise exceptions.CommandInvalidKeyArgument(
             "you can only modify by matching `id`, "
             "rather than by `%s`" % query_key)
+    pk_value = instance.schema.convert_primary_key_type(query_value)
 
     kvs = utils.convert_argument_groups_into_dict(arguments)
-    return [instance.data.driver.update_one(query_value, kvs)]
+    if instance.schema.primary_key in kvs:
+        raise exceptions.CommandInvalidKeyArgument(
+            "cannot modify primary key `%s`" % instance.schema.primary_key)
+
+    instance.schema.validate_keys(kvs, no_missing=False, no_extra=True)
+    instance.schema.validate_types(kvs)
+    kvs = instance.schema.convert_types(kvs)
+    return [instance.data.driver.update_one(pk_value, kvs)]
 
 
 @register('help', 'Help', 'Show this help message.',

@@ -1,7 +1,16 @@
 columns:
   - name: id
+    type: integer
     attribute: primary_key
+
   - name: name
+    type: string
+
   - name: in_date
+    type: date
+
   - name: department
+    type: string
+
   - name: position
+    type: string
