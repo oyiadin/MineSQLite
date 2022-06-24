@@ -4,7 +4,7 @@ import typing
 
 from minesqlite import exceptions
 from minesqlite.data.base import DataManagerABC, CursorABC
-from minesqlite.minesqlite import MineSQLite
+from minesqlite import MineSQLite
 
 PKType = str
 RowType = dict

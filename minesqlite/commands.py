@@ -10,12 +10,14 @@ from minesqlite.command_registry import (
     get_command_info,
 )
 from minesqlite.common import utils
-from minesqlite.minesqlite import MineSQLite
+
+if typing.TYPE_CHECKING:
+    from minesqlite import MineSQLite
 
 
 @register(command='add', name='Add', description='Adds an employee.',
           args_format='key-value', min_args=1)
-def command_add(instance: MineSQLite,
+def command_add(instance: 'MineSQLite',
                 arguments: list[tuple[str, str]]) -> list[dict]:
     """Adds an employee.
 
@@ -24,7 +26,6 @@ def command_add(instance: MineSQLite,
     """
     kvs = utils.convert_argument_groups_into_dict(arguments)
     instance.schema.validate_keys(kvs)
-    instance.schema.validate_types(kvs)
 
     kvs = instance.schema.convert_types(kvs)
     pk = kvs.pop(instance.schema.primary_key)
@@ -33,7 +34,7 @@ def command_add(instance: MineSQLite,
 
 @register('del', 'Delete', 'Delete an employee.',
           args_format='value', min_args=1, max_args=1)
-def command_del(instance: MineSQLite, arguments: list[str]) -> list[dict]:
+def command_del(instance: 'MineSQLite', arguments: list[str]) -> list[dict]:
     """Delete an employee.
 
     Example:
@@ -45,7 +46,7 @@ def command_del(instance: MineSQLite, arguments: list[str]) -> list[dict]:
 
 @register('get', 'Get', 'Gets the info of an employee.',
           args_format='value', min_args=1, max_args=1)
-def command_get(instance: MineSQLite,
+def command_get(instance: 'MineSQLite',
                 arguments: list[str]) -> list[dict]:
     """Gets the information of an employee.
 
@@ -58,7 +59,7 @@ def command_get(instance: MineSQLite,
 
 @register('list', 'List', 'List all employees.',
           args_format='key-value')
-def command_list(instance: MineSQLite,
+def command_list(instance: 'MineSQLite',
                  arguments: list[tuple[str, str]]) -> list[dict]:
     """List all employees (after filtering) and sort them.
 
@@ -78,7 +79,6 @@ def command_list(instance: MineSQLite,
 
     instance.schema.validate_keys(
         filter_params, no_missing=False, no_extra=True)
-    instance.schema.validate_types(filter_params)
     filter_params = instance.schema.convert_types(filter_params)
 
     def do_filter(_row: dict) -> bool:
@@ -120,7 +120,7 @@ def command_list(instance: MineSQLite,
 
 @register('mod', 'Modify', 'Modify an employee.',
           args_format='key-value', min_args=2)
-def command_mod(instance: MineSQLite,
+def command_mod(instance: 'MineSQLite',
                 arguments: list[tuple[str, str]]) -> list[dict]:
     """Modify an employee.
 
@@ -140,14 +140,13 @@ def command_mod(instance: MineSQLite,
             "cannot modify primary key `%s`" % instance.schema.primary_key)
 
     instance.schema.validate_keys(kvs, no_missing=False, no_extra=True)
-    instance.schema.validate_types(kvs)
     kvs = instance.schema.convert_types(kvs)
     return [instance.data.driver.update_one(pk_value, kvs)]
 
 
 @register('help', 'Help', 'Show this help message.',
           args_format='value', max_args=1)
-def command_help(instance: MineSQLite, arguments: list[str]) \
+def command_help(instance: 'MineSQLite', arguments: list[str]) \
         -> typing.List[dict]:
     what = arguments[0] if arguments else None
     print('Help:\n')

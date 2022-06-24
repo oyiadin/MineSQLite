@@ -8,7 +8,7 @@ from tabulate import tabulate
 from minesqlite import exceptions
 from minesqlite.command_registry import get_command_info, CommandInfo
 from minesqlite.common.split_words_fsm import split_words
-from minesqlite.minesqlite import MineSQLite
+from minesqlite import MineSQLite
 
 
 def read_lines(instance: MineSQLite) -> typing.Iterator[str]:
@@ -34,7 +34,7 @@ def validate_key(key: str):
     magic_params = ['$sort_asc', '$sort_desc']
     if key in magic_params:
         return
-    if re.match(r'^[a-zA-Z_]\w*$', key) is None:
+    if re.match(r'^[a-zA-Z_]\w*$', key, flags=re.ASCII) is None:
         raise exceptions.CommandInvalidKeyArgument(key=key)
 
 
