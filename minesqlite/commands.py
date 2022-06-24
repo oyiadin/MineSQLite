@@ -10,12 +10,14 @@ from minesqlite.command_registry import (
     get_command_info,
 )
 from minesqlite.common import utils
-from minesqlite.minesqlite import MineSQLite
+
+if typing.TYPE_CHECKING:
+    from minesqlite import MineSQLite
 
 
 @register(command='add', name='Add', description='Adds an employee.',
           args_format='key-value', min_args=1)
-def command_add(instance: MineSQLite,
+def command_add(instance: 'MineSQLite',
                 arguments: list[tuple[str, str]]) -> list[dict]:
     """Adds an employee.
 
@@ -33,7 +35,7 @@ def command_add(instance: MineSQLite,
 
 @register('del', 'Delete', 'Delete an employee.',
           args_format='value', min_args=1, max_args=1)
-def command_del(instance: MineSQLite, arguments: list[str]) -> list[dict]:
+def command_del(instance: 'MineSQLite', arguments: list[str]) -> list[dict]:
     """Delete an employee.
 
     Example:
@@ -45,7 +47,7 @@ def command_del(instance: MineSQLite, arguments: list[str]) -> list[dict]:
 
 @register('get', 'Get', 'Gets the info of an employee.',
           args_format='value', min_args=1, max_args=1)
-def command_get(instance: MineSQLite,
+def command_get(instance: 'MineSQLite',
                 arguments: list[str]) -> list[dict]:
     """Gets the information of an employee.
 
@@ -58,7 +60,7 @@ def command_get(instance: MineSQLite,
 
 @register('list', 'List', 'List all employees.',
           args_format='key-value')
-def command_list(instance: MineSQLite,
+def command_list(instance: 'MineSQLite',
                  arguments: list[tuple[str, str]]) -> list[dict]:
     """List all employees (after filtering) and sort them.
 
@@ -120,7 +122,7 @@ def command_list(instance: MineSQLite,
 
 @register('mod', 'Modify', 'Modify an employee.',
           args_format='key-value', min_args=2)
-def command_mod(instance: MineSQLite,
+def command_mod(instance: 'MineSQLite',
                 arguments: list[tuple[str, str]]) -> list[dict]:
     """Modify an employee.
 
@@ -147,7 +149,7 @@ def command_mod(instance: MineSQLite,
 
 @register('help', 'Help', 'Show this help message.',
           args_format='value', max_args=1)
-def command_help(instance: MineSQLite, arguments: list[str]) \
+def command_help(instance: 'MineSQLite', arguments: list[str]) \
         -> typing.List[dict]:
     what = arguments[0] if arguments else None
     print('Help:\n')

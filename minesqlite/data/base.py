@@ -6,7 +6,7 @@ import typing
 from minesqlite import exceptions
 
 if typing.TYPE_CHECKING:
-    from minesqlite.minesqlite import MineSQLite
+    from minesqlite import MineSQLite
 
 
 _KeyType = str

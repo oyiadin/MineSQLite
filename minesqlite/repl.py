@@ -8,7 +8,7 @@ from tabulate import tabulate
 from minesqlite import exceptions
 from minesqlite.command_registry import get_command_info, CommandInfo
 from minesqlite.common.split_words_fsm import split_words
-from minesqlite.minesqlite import MineSQLite
+from minesqlite import MineSQLite
 
 
 def read_lines(instance: MineSQLite) -> typing.Iterator[str]:

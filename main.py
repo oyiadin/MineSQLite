@@ -1,6 +1,6 @@
 # coding=utf-8
 # Author: @hsiaoxychen
-from minesqlite.minesqlite import MineSQLite
+from minesqlite import MineSQLite
 from minesqlite.repl import repl_loop
 
 """
@@ -21,7 +21,13 @@ list department P1 $sort_desc position
 list department P1 $sort_desc position $sort_asc name
 """
 
-if __name__ == '__main__':
+
+def main():
     instance = MineSQLite(
-        sysconf_kwargs={'conf_file': open('etc/config.ini')})
+        sysconf_kwargs={'conf_file': open(
+            'etc/config.ini')})
     repl_loop(instance)
+
+
+if __name__ == '__main__':
+    main()
