@@ -15,17 +15,15 @@ if typing.TYPE_CHECKING:
 
 @dataclass
 class FieldType(object):
-    validator: typing.Callable = None
     converter: typing.Callable = None
 
 
 field_types: dict[str, FieldType] = collections.defaultdict(FieldType)
 
 
-def register_field_helper(helper_type: typing.Literal["validator", "converter"],
-                          type_name: str):
+def register_field_helper(type_name: str):
     def decorator(func):
-        setattr(field_types[type_name], helper_type, func)
+        setattr(field_types[type_name], 'converter', func)
         return func
     return decorator
 
@@ -75,14 +73,6 @@ class SchemaManager(object):
                 raise exceptions.DataEntryInvalid(
                     reason="unexpected extra keys: %s" % ', '.join(extra_keys))
 
-    def validate_types(self, entry: dict):
-        """Validate the types of each column within the entry."""
-        for col in self._inner_data['columns']:
-            if col['name'] not in entry:
-                continue
-            validator = field_types[col['type']].validator
-            validator(entry[col['name']])
-
     def convert_types(self, entry: dict) -> dict:
         """Convert the entry inplace."""
         for col in self._inner_data['columns']:
@@ -98,38 +88,25 @@ class SchemaManager(object):
         return field_types[field_type].converter(pk_value)
 
     @staticmethod
-    @register_field_helper("validator", "integer")
-    def _validate_integer_type(value: str):
-        if not value.isdigit():
-            raise exceptions.DataEntryInvalid(
-                reason="invalid integer: %s" % value)
-
-    @staticmethod
-    @register_field_helper("converter", "integer")
+    @register_field_helper("integer")
     def _convert_integer_type(value: str) -> int:
-        return int(value)
+        try:
+            return int(value)
+        except Exception as e:
+            raise exceptions.DataEntryInvalid(
+                reason="invalid integer: %s" % value) from e
 
     @staticmethod
-    @register_field_helper("validator", "string")
-    def _validate_string_type(value: str):
-        return True
-
-    @staticmethod
-    @register_field_helper("converter", "string")
+    @register_field_helper("string")
     def _convert_string_type(value: str) -> str:
         return value
 
     @staticmethod
-    @register_field_helper("validator", "date")
-    def _validate_date_type(value: str):
+    @register_field_helper("date")
+    def _convert_date_type(value: str):
         try:
-            datetime.datetime.strptime(value, '%Y-%m-%d')
-        except ValueError:
+            return datetime.datetime.strptime(value, '%Y-%m-%d')
+        except ValueError as e:
             raise exceptions.DataEntryInvalid(
                 reason="incorrect date format, should be YYYY-MM-DD: %s"
-                       % value)
-
-    @staticmethod
-    @register_field_helper("converter", "date")
-    def _validate_date_type(value: str):
-        return datetime.datetime.strptime(value, '%Y-%m-%d')
+                       % value) from e

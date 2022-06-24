@@ -26,7 +26,6 @@ def command_add(instance: 'MineSQLite',
     """
     kvs = utils.convert_argument_groups_into_dict(arguments)
     instance.schema.validate_keys(kvs)
-    instance.schema.validate_types(kvs)
 
     kvs = instance.schema.convert_types(kvs)
     pk = kvs.pop(instance.schema.primary_key)
@@ -80,7 +79,6 @@ def command_list(instance: 'MineSQLite',
 
     instance.schema.validate_keys(
         filter_params, no_missing=False, no_extra=True)
-    instance.schema.validate_types(filter_params)
     filter_params = instance.schema.convert_types(filter_params)
 
     def do_filter(_row: dict) -> bool:
@@ -142,7 +140,6 @@ def command_mod(instance: 'MineSQLite',
             "cannot modify primary key `%s`" % instance.schema.primary_key)
 
     instance.schema.validate_keys(kvs, no_missing=False, no_extra=True)
-    instance.schema.validate_types(kvs)
     kvs = instance.schema.convert_types(kvs)
     return [instance.data.driver.update_one(pk_value, kvs)]
 
