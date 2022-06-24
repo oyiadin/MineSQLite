@@ -107,6 +107,7 @@ def repl_loop(instance: MineSQLite):
     3) PRINT the command results
     4) LOOP again...
     """
+    print(instance.sysconf['repl.banner'])
     for line in read_lines(instance):
         try:
             words = split_words(line)

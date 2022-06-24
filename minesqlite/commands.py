@@ -162,6 +162,11 @@ def command_help(instance: 'MineSQLite', arguments: list[str]) \
                          f'{command:{max_width}} \t',
                          info.description)
 
+        print()
+        print('To get detailed information of a very command, '
+              'you can attach it after the `help`.')
+        print('For example, have a try: help add')
+
     # help of a specific command
     else:
         info = get_command_info(what)
