@@ -34,7 +34,7 @@ def validate_key(key: str):
     magic_params = ['$sort_asc', '$sort_desc']
     if key in magic_params:
         return
-    if re.match(r'^[a-zA-Z_]\w*$', key) is None:
+    if re.match(r'^[a-zA-Z_]\w*$', key, flags=re.ASCII) is None:
         raise exceptions.CommandInvalidKeyArgument(key=key)
 
 

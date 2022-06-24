@@ -2,7 +2,7 @@
 
 ## Install
 
-Please use Python 3.10
+Please use Python 3.9+
 
 ```
 $ pip install -r requirements.txt
@@ -12,6 +12,13 @@ $ pip install -r requirements.txt
 
 ```
 $ python main.py
+```
+
+## Unittest
+
+```
+pip install -r test-requirements.txt
+pytest .
 ```
 
 ## License
