@@ -1,6 +1,5 @@
 # coding=utf-8
 # Author: @hsiaoxychen
-import datetime
 import inspect
 from unittest import mock
 import pytest

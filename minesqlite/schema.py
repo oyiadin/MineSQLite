@@ -35,6 +35,10 @@ class SchemaManager(object):
         self._inner_data = data
         self._primary_key = None
 
+        if 'columns' not in data or not data['columns']:
+            raise exceptions.InternalError(
+                "`columns` is required to be a non-empty list")
+
         # validate `type` field
         for col in data['columns']:
             if 'type' not in col:
@@ -48,8 +52,14 @@ class SchemaManager(object):
         for col in data['columns']:
             attrs = col.get('attribute', '').split(',')
             if 'primary_key' in attrs:
+                if self._primary_key is not None:
+                    raise exceptions.InternalError(
+                        "multiple primary key is not allowed")
                 self._primary_key = col
-                break
+
+        if self._primary_key is None:
+            raise exceptions.InternalError(
+                "no primary_key found within schema definition")
 
     @property
     def fields(self):
