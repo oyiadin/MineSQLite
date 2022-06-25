@@ -5,9 +5,9 @@ import inspect
 import pytest
 from pytest_mock import MockerFixture
 
-from conftest import TEST_PK
 from minesqlite import exceptions
 from minesqlite.data.drivers.memory_dict import MemoryDictDataManager
+from tests.conftest import TEST_PK
 from tests.utils import *
 
 

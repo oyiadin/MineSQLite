@@ -3,10 +3,10 @@
 import pytest
 from pytest_mock import MockerFixture
 
-from conftest import TEST_PK
 from minesqlite import commands, exceptions
 from minesqlite.common import utils
 from minesqlite.command_registry import get_command_info
+from tests.conftest import TEST_PK
 from tests.utils import *
 
 
