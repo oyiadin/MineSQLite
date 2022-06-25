@@ -1,86 +1,164 @@
 # coding=utf-8
 # Author: @hsiaoxychen
-import inspect
-from unittest import mock
 import pytest
+from pytest_mock import MockerFixture
 
+from conftest import TEST_PK
 from minesqlite import commands, exceptions
 from minesqlite.common import utils
+from minesqlite.command_registry import get_command_info
+from tests.utils import *
 
 
-@pytest.mark.parametrize(['arguments', 'expect'], [
-    ([
-         ('id', '12345'),
-         ('name', 'Chen Xiaoyuan'),
-         ('in_date', '2022-06-05'),
-         ('department', 'aCMP'),
-         ('position', 'Software Development Engineer'),
-     ],
-     True),
+@pytest.mark.parametrize('arguments', [
+    [('id', '12345'), ('name', 'Chen Xiaoyuan')],
 ])
-def test_command_add(instance, arguments, expect):
-    mock_ret = mock.Mock()
-    mock_converted = mock.Mock()
-    mock_convert_types = mock.MagicMock()
+def test_command_add(mocker: MockerFixture, instance, arguments):
+    """Test the basic procedures of add command."""
+    assert get_command_info('add') is not None
+
+    mock_ret = mocker.Mock()
+    mock_converted = mocker.Mock()
+    mock_convert_types = mocker.MagicMock()
     mock_convert_types.return_value = mock_converted
-    instance.schema.convert_types = mock_convert_types
 
     def mock_create_one(*args):
         assert args[0] == mock_converted.pop(instance.schema.primary_key)
         assert args[1] == mock_convert_types()
         return mock_ret
 
-    instance.data.driver.create_one = mock_create_one
+    mocker.patch.object(instance.schema, 'validate_keys')
+    mocker.patch.object(instance.schema, 'convert_types', mock_convert_types)
+    mocker.patch.object(instance.data.driver, 'create_one', mock_create_one)
 
-    if inspect.isclass(expect) and issubclass(expect, Exception):
-        with pytest.raises(exceptions.DataEntryInvalid):
-            commands.command_add(instance, arguments.copy())
-    else:
-        got = commands.command_add(instance, arguments.copy())
-        assert got == [mock_ret]
-        mock_convert_types.assert_called()
+    got = commands.command_add(instance, arguments.copy())
+    assert got == [mock_ret]
+    mock_convert_types.assert_called()
 
 
-@pytest.mark.parametrize(['arguments'], [
-    (['12345'],),
+@pytest.mark.parametrize('arguments', [
+    ['12345'],
 ])
-def test_command_del(instance, arguments):
-    mock_ret = mock.Mock()
-    mock_delete_one = mock.Mock()
+def test_command_del(mocker: MockerFixture, instance, arguments):
+    assert get_command_info('del') is not None
+
+    mock_ret = mocker.Mock()
+    mock_delete_one = mocker.Mock()
     mock_delete_one.return_value = mock_ret
-    instance.data.driver.delete_one = mock_delete_one
+
+    mocker.patch.object(instance.schema, 'convert_primary_key_type')
+    mocker.patch.object(instance.data.driver, 'delete_one', mock_delete_one)
+
     got = commands.command_del(instance, arguments)
     assert got == [mock_ret]
 
 
-@pytest.mark.parametrize(['arguments'], [
-    (['12345'],),
+@pytest.mark.parametrize('arguments', [
+    ['12345'],
 ])
-def test_command_get(instance, arguments):
-    mock_ret = mock.Mock()
-    mock_read_one = mock.Mock()
+def test_command_get(mocker: MockerFixture, instance, arguments):
+    assert get_command_info('get') is not None
+
+    mock_ret = mocker.Mock()
+    mock_read_one = mocker.Mock()
     mock_read_one.return_value = mock_ret
-    instance.data.driver.read_one = mock_read_one
+
+    mocker.patch.object(instance.schema, 'convert_primary_key_type')
+    mocker.patch.object(instance.data.driver, 'read_one', mock_read_one)
+
     got = commands.command_get(instance, arguments)
     assert got == [mock_ret]
 
 
-@pytest.mark.parametrize(['data', 'arguments', 'expect'], [
-    ([...], [], [...]),
-    ([{'k': 'v'}], [('k', 'v')], [{'k': 'v'}]),
-    ([{'k': 'v1'}], [('k', 'v')], []),
-    ([], [('k', 'v')], []),
-    ([], [('k', 'v1'), ('k', 'v2')], exceptions.CommandArgumentConflict),
-    ([{'k': 2}, {'k': 1}], [('$sort_asc', 'k')], [{'k': 1}, {'k': 2}]),
-    ([{'k': 1}, {'k': 2}], [('$sort_desc', 'k')], [{'k': 2}, {'k': 1}]),
-    ([{'k1': 2, 'k2': 1}, {'k1': 1, 'k2': 3}, {'k1': 2, 'k2': 2},
-      {'k1': 2, 'k2': 1}],
-     [('$sort_desc', 'k1'), ('$sort_asc', 'k2')],
-     [{'k1': 2, 'k2': 1}, {'k1': 2, 'k2': 1}, {'k1': 2, 'k2': 2},
-      {'k1': 1, 'k2': 3}]),
-    ([..., ...], [('$illegal', 'v')], exceptions.InternalError),
-])
-def test_command_list(instance, data, arguments, expect):
+@pytest.mark.parametrize(
+    ['data', 'arguments', 'expect', 'expect_exc'],
+    [
+        # empty query to empty data
+        (
+            [],
+            [],
+            [],
+            no_raise(),
+        ),
+        # empty query to non-empty data
+        (
+            [...],
+            [],
+            [...],  # returns the whole original data
+            no_raise(),
+        ),
+        # filter successfully
+        (
+            [{'pk': 'pkv1', 'k': 'v1'}, {'pk': 'pkv2', 'k': 'v2'}],
+            [('k', 'v2')],
+            [{'pk': 'pkv2', 'k': 'v2'}],
+            no_raise(),
+        ),
+        # no entries matched after filtering
+        (
+            [{'k': 'v'}],
+            [('k', 'v123')],
+            [],
+            no_raise(),
+        ),
+        # do filter in the empty data
+        (
+            [],
+            [('k', 'v')],
+            [],
+            no_raise(),
+        ),
+        # do filter with conflict keys
+        (
+            [],
+            [('k', 'v1'), ('k', 'v2')],
+            None,
+            raises(exceptions.CommandArgumentConflict),
+        ),
+        # sort in ascending order
+        (
+            [{'k': 2}, {'k': 1}],
+            [('$sort_asc', 'k')],
+            [{'k': 1}, {'k': 2}],
+            no_raise(),
+        ),
+        # sort in descending order
+        (
+            [{'k': 1}, {'k': 2}],
+            [('$sort_desc', 'k')],
+            [{'k': 2}, {'k': 1}],
+            no_raise(),
+        ),
+        # sort with multiple orders
+        (
+            [
+                {'k1': 2, 'k2': 1},
+                {'k1': 1, 'k2': 3},
+                {'k1': 2, 'k2': 2},
+                {'k1': 2, 'k2': 1},
+            ],
+            [('$sort_desc', 'k1'), ('$sort_asc', 'k2')],
+            [
+                {'k1': 2, 'k2': 1},
+                {'k1': 2, 'k2': 1},
+                {'k1': 2, 'k2': 2},
+                {'k1': 1, 'k2': 3},
+            ],
+            no_raise(),
+        ),
+        # sort with illegal magic key
+        (
+            [..., ...],
+            [('$illegal', 'v')],
+            None,
+            raises(exceptions.InternalError),
+        ),
+    ]
+)
+def test_command_list(mocker: MockerFixture, instance,
+                      data, arguments, expect, expect_exc):
+    assert get_command_info('list') is not None
+
     def mock_convert_types(*args, **kwargs):
         return utils.convert_argument_groups_into_dict(
             [group for group in arguments if not group[0].startswith('$')])
@@ -91,72 +169,68 @@ def test_command_list(instance, data, arguments, expect):
     def mock_next_row(cursor, *args, **kwargs):
         return cursor - 1, data[cursor - 1]
 
-    @mock.patch.object(instance.schema, 'validate_keys', mock.Mock())
-    @mock.patch.object(instance.schema, 'convert_types', mock_convert_types)
-    @mock.patch.object(instance.data.driver, 'build_cursor', mock_build_cursor)
-    @mock.patch.object(instance.data.driver, 'next_row', mock_next_row)
-    def do_test():
-        if inspect.isclass(expect) and issubclass(expect, Exception):
-            with pytest.raises(expect):
-                commands.command_list(instance, arguments)
-        else:
-            got = commands.command_list(instance, arguments)
-            assert got == expect
+    mocker.patch.object(instance.schema, 'validate_keys')
+    mocker.patch.object(instance.schema, 'convert_types', mock_convert_types)
+    mocker.patch.object(instance.data.driver, 'build_cursor', mock_build_cursor)
+    mocker.patch.object(instance.data.driver, 'next_row', mock_next_row)
 
-    do_test()
+    with expect_exc:
+        got = commands.command_list(instance, arguments)
+        assert got == expect
 
 
-@pytest.mark.parametrize(['arguments', 'expect'], [
-    ([('id', '12345'), ('name', 'test')], True),
-    ([('id', '12345'), ('id', '54321')], exceptions.CommandInvalidKeyArgument),
-])
-def test_command_mod(instance, arguments, expect):
-    mock_ret = mock.Mock()
+@pytest.mark.parametrize(
+    ['arguments', 'expect_exc'],
+    [
+        # normal test case
+        (
+            [(TEST_PK, '12345'), ('name', 'test')],
+            no_raise(),
+        ),
+        # try to modify primary key
+        (
+            [(TEST_PK, '12345'), (TEST_PK, '54321')],
+            raises(exceptions.CommandInvalidKeyArgument),
+        ),
+        # try to match with non-primary key
+        (
+            [('something-not-pk', '12345'), ('name', 'test')],
+            raises(exceptions.CommandInvalidKeyArgument),
+        ),
+    ]
+)
+def test_command_mod(mocker: MockerFixture, instance, arguments, expect_exc):
+    assert get_command_info('mod') is not None
 
-    mock_update_one = mock.Mock()
+    mocker.patch.object(instance.schema, 'primary_key', TEST_PK)
+
+    mock_ret = mocker.Mock()
+    mock_update_one = mocker.Mock()
     mock_update_one.return_value = mock_ret
+    mocker.patch.object(instance.data.driver, 'update_one', mock_update_one)
 
-    instance.schema.primary_key = 'id'
-
-    @mock.patch.object(instance.data.driver, 'update_one', mock_update_one)
-    def do_test():
-        if inspect.isclass(expect) and issubclass(expect, Exception):
-            with pytest.raises(expect):
-                commands.command_mod(instance, arguments)
-        else:
-            got = commands.command_mod(instance, arguments)
-            assert got == [mock_ret]
-
-    do_test()
+    with expect_exc:
+        got = commands.command_mod(instance, arguments)
+        assert got == [mock_ret]
 
 
-def test_command_mod_invalid_key(instance):
-    instance.schema.primary_key = 'another_key'
-    with pytest.raises(exceptions.CommandInvalidKeyArgument):
-        commands.command_mod(instance, arguments=[('id', '12345')])
+def test_command_help_of_all(mocker: MockerFixture, instance):
+    assert get_command_info('help') is not None
 
-
-def test_command_help_of_all(instance):
-    mock_ret = {'test': mock.Mock()}
-    mock_get_all_commands = mock.Mock()
+    mock_ret = {'test': mocker.Mock()}
+    mock_get_all_commands = mocker.Mock()
     mock_get_all_commands.return_value = mock_ret
-
-    @mock.patch('minesqlite.commands.get_all_commands', mock_get_all_commands)
-    def do_test():
-        commands.command_help(instance, [])
-
-    do_test()
+    mocker.patch('minesqlite.commands.get_all_commands', mock_get_all_commands)
+    commands.command_help(instance, [])
 
 
-def test_command_help_of_specific(instance):
-    mock_ret = mock.Mock()
-    mock_cmd = mock.Mock()
-    mock_get_command_info = mock.Mock()
+def test_command_help_of_specific(mocker: MockerFixture, instance):
+    mock_ret = mocker.Mock()
+    mock_cmd = mocker.Mock()
+    mock_get_command_info = mocker.Mock()
     mock_get_command_info.return_value = mock_ret
 
-    @mock.patch('minesqlite.commands.get_command_info', mock_get_command_info)
-    def do_test():
-        commands.command_help(instance, [mock_cmd])
-        mock_get_command_info.assert_called_once_with(mock_cmd)
+    mocker.patch('minesqlite.commands.get_command_info', mock_get_command_info)
 
-    do_test()
+    commands.command_help(instance, [mock_cmd])
+    mock_get_command_info.assert_called_once_with(mock_cmd)
