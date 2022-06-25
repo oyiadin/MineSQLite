@@ -21,7 +21,7 @@ class SysConfManager(collections.abc.MutableMapping):
 
         # load config file
         section = 'DEFAULT'
-        config = configparser.SafeConfigParser()
+        config = configparser.ConfigParser()
         config.read_file(conf_file)
         for k, v in config.items(section=section):
             self[k] = v.strip('"')
